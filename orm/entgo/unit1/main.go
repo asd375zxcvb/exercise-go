@@ -13,105 +13,48 @@ import (
 )
 
 func main() {
-	client, err := ent.Open("postgres", "host=127.0.0.1 port=5432 user=postgres dbname=postgres password=123456 sslmode=disable", ent.Debug())
-	if err != nil {
-		log.Fatalf("failed opening connection to sqlite: %v", err)
-	}
+	client := Must(ent.Open("postgres", "host=127.0.0.1 port=5432 user=postgres dbname=postgres password=123456 sslmode=disable", ent.Debug()))
 	defer func(client *ent.Client) {
 		err := client.Close()
 		if err != nil {
-			log.Fatalf("failed closing client: %v", err)
+			log.Printf("failed closing the client: %v", err)
 		}
 	}(client)
 	ctx := context.Background()
-	if err := client.Schema.Create(ctx); err != nil {
-		log.Fatalf("failed creating schema resources: %v", err)
-	}
-	err = round1(ctx, client)
-	if err != nil {
-		log.Fatalf("failed round1 resources: %v", err)
-	}
-	err = round2(ctx, client)
-	if err != nil {
-		log.Fatalf("failed round2 resources: %v", err)
-	}
-	err = round3(ctx, client)
-	if err != nil {
-		log.Fatalf("failed round3 resources: %v", err)
-	}
-	err = client.Close()
-	if err != nil {
-		log.Fatalf("failed client Close resources: %v", err)
-	}
+	MustExec(client.Schema.Create(ctx))
+	MustExec(round1(ctx, client))
+	MustExec(round2(ctx, client))
+	MustExec(round3(ctx, client))
 }
 
 func round1(ctx context.Context, client *ent.Client) error {
 	log.Println("====================  round1  start =======================")
-	_, err := CreateUser(ctx, client)
-	if err != nil {
-		return err
-	}
-	_, err = QueryUser(ctx, client)
-	if err != nil {
-		return err
-	}
-	client.User.Delete().Exec(ctx)
+	Must(CreateUser(ctx, client))
+	Must(QueryUser(ctx, client))
+	Must(client.User.Delete().Exec(ctx))
 	log.Println("====================  round1  end   =======================")
 	return nil
 }
 
 func round2(ctx context.Context, client *ent.Client) error {
 	log.Println("====================  round2  start =======================")
-	a8m, err := CreateCars(ctx, client)
-	if err != nil {
-		return err
-	}
-	err = QueryCars(ctx, a8m)
-	if err != nil {
-		return err
-	}
-	_, err = client.User.Delete().Exec(ctx)
-	if err != nil {
-		return err
-	}
-	_, err = client.Car.Delete().Exec(ctx)
-	if err != nil {
-		return err
-	}
+	a8m := Must(CreateCars(ctx, client))
+	MustExec(QueryCars(ctx, a8m))
+	Must(client.User.Delete().Exec(ctx))
+	Must(client.Car.Delete().Exec(ctx))
 	log.Println("====================  round2  end   =======================")
 	return nil
 }
 
 func round3(ctx context.Context, client *ent.Client) error {
 	log.Println("====================  round3  start =======================")
-	err := CreateGraph(ctx, client)
-	if err != nil {
-		return err
-	}
-	err = QueryGithub(ctx, client)
-	if err != nil {
-		return err
-	}
-	err = QueryArielCars(ctx, client)
-	if err != nil {
-		return err
-	}
-	err = QueryGroupWithUsers(ctx, client)
-	if err != nil {
-		return err
-	}
-	_, err = client.User.Delete().Exec(ctx)
-	if err != nil {
-		return err
-	}
-	_, err = client.Car.Delete().Exec(ctx)
-	if err != nil {
-		return err
-	}
-	_, err = client.Group.Delete().Exec(ctx)
-	if err != nil {
-		return err
-	}
+	MustExec(CreateGraph(ctx, client))
+	MustExec(QueryGithub(ctx, client))
+	MustExec(QueryArielCars(ctx, client))
+	MustExec(QueryGroupWithUsers(ctx, client))
+	Must(client.User.Delete().Exec(ctx))
+	Must(client.Car.Delete().Exec(ctx))
+	Must(client.Group.Delete().Exec(ctx))
 	log.Println("====================  round3  end   =======================")
 	return nil
 }
@@ -302,4 +245,19 @@ func QueryGroupWithUsers(ctx context.Context, client *ent.Client) error {
 	}
 	log.Println("groups returned:", groups)
 	return nil
+}
+
+func Must[T any](v T, err error) T {
+	if err != nil {
+		log.Printf("unexpected error: %v", err)
+		panic(err)
+	}
+	return v
+}
+
+func MustExec(err error) {
+	if err != nil {
+		log.Printf("unexpected error: %v", err)
+		panic(err)
+	}
 }
