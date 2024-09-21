@@ -6,7 +6,7 @@ import (
 	"entgo/ent/car"
 	"entgo/ent/group"
 	"entgo/ent/user"
-	"fmt"
+	"github.com/cockroachdb/errors"
 	_ "github.com/lib/pq"
 	"log"
 	"time"
@@ -17,7 +17,7 @@ func main() {
 	defer func(client *ent.Client) {
 		err := client.Close()
 		if err != nil {
-			log.Printf("failed closing the client: %v", err)
+			log.Fatalf("failed closing the client: %v", err)
 		}
 	}(client)
 	ctx := context.Background()
@@ -66,7 +66,7 @@ func CreateUser(ctx context.Context, client *ent.Client) (*ent.User, error) {
 		SetName("a8m").
 		Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed creating user: %w", err)
+		return nil, errors.WithStack(err)
 	}
 	log.Println("user was created: ", u)
 	return u, nil
@@ -78,7 +78,7 @@ func QueryUser(ctx context.Context, client *ent.Client) (*ent.User, error) {
 		Where(user.Name("a8m")).
 		Only(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed querying user: %w", err)
+		return nil, errors.WithStack(err)
 	}
 	log.Println("user returned: ", u)
 	return u, nil
@@ -91,7 +91,7 @@ func CreateCars(ctx context.Context, client *ent.Client) (*ent.User, error) {
 		SetRegisteredAt(time.Now()).
 		Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed creating car: %w", err)
+		return nil, errors.WithStack(err)
 	}
 	log.Println("car was created: ", tesla)
 	ford, err := client.Car.
@@ -100,7 +100,7 @@ func CreateCars(ctx context.Context, client *ent.Client) (*ent.User, error) {
 		SetRegisteredAt(time.Now()).
 		Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed creating car: %w", err)
+		return nil, errors.WithStack(err)
 	}
 	log.Println("car was created: ", ford)
 	a8m, err := client.User.
@@ -110,7 +110,7 @@ func CreateCars(ctx context.Context, client *ent.Client) (*ent.User, error) {
 		AddCars(tesla, ford).
 		Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed creating user: %w", err)
+		return nil, errors.WithStack(err)
 	}
 	log.Println("user was created: ", a8m)
 	return a8m, nil
@@ -119,14 +119,14 @@ func CreateCars(ctx context.Context, client *ent.Client) (*ent.User, error) {
 func QueryCars(ctx context.Context, a8m *ent.User) error {
 	cars, err := a8m.QueryCars().All(ctx)
 	if err != nil {
-		return fmt.Errorf("failed querying user cars: %w", err)
+		return errors.WithStack(err)
 	}
 	log.Println("returned cars:", cars)
 	ford, err := a8m.QueryCars().
 		Where(car.Model("Ford")).
 		Only(ctx)
 	if err != nil {
-		return fmt.Errorf("failed querying user cars: %w", err)
+		return errors.WithStack(err)
 	}
 	log.Println(ford)
 	return nil
@@ -139,7 +139,7 @@ func CreateGraph(ctx context.Context, client *ent.Client) error {
 		SetName("Ariel").
 		Save(ctx)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	neta, err := client.User.
 		Create().
@@ -147,7 +147,7 @@ func CreateGraph(ctx context.Context, client *ent.Client) error {
 		SetName("Neta").
 		Save(ctx)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	err = client.Car.
 		Create().
@@ -156,7 +156,7 @@ func CreateGraph(ctx context.Context, client *ent.Client) error {
 		SetOwner(a8m).
 		Exec(ctx)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	err = client.Car.
 		Create().
@@ -165,7 +165,7 @@ func CreateGraph(ctx context.Context, client *ent.Client) error {
 		SetOwner(a8m).
 		Exec(ctx)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	err = client.Car.
 		Create().
@@ -174,7 +174,7 @@ func CreateGraph(ctx context.Context, client *ent.Client) error {
 		SetOwner(neta).
 		Exec(ctx)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	err = client.Group.
 		Create().
@@ -182,7 +182,7 @@ func CreateGraph(ctx context.Context, client *ent.Client) error {
 		AddUsers(neta, a8m).
 		Exec(ctx)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	err = client.Group.
 		Create().
@@ -190,7 +190,7 @@ func CreateGraph(ctx context.Context, client *ent.Client) error {
 		AddUsers(a8m).
 		Exec(ctx)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	log.Println("The graph was created successfully")
 	return nil
@@ -204,7 +204,7 @@ func QueryGithub(ctx context.Context, client *ent.Client) error {
 		QueryCars().
 		All(ctx)
 	if err != nil {
-		return fmt.Errorf("failed getting cars: %w", err)
+		return errors.WithStack(err)
 	}
 	log.Println("cars returned:", cars)
 	return nil
@@ -229,7 +229,7 @@ func QueryArielCars(ctx context.Context, client *ent.Client) error {
 		).
 		All(ctx)
 	if err != nil {
-		return fmt.Errorf("failed getting cars: %w", err)
+		return errors.WithStack(err)
 	}
 	log.Println("cars returned:", cars)
 	return nil
@@ -241,7 +241,7 @@ func QueryGroupWithUsers(ctx context.Context, client *ent.Client) error {
 		Where(group.HasUsers()).
 		All(ctx)
 	if err != nil {
-		return fmt.Errorf("failed getting groups: %w", err)
+		return errors.WithStack(err)
 	}
 	log.Println("groups returned:", groups)
 	return nil
@@ -249,7 +249,7 @@ func QueryGroupWithUsers(ctx context.Context, client *ent.Client) error {
 
 func Must[T any](v T, err error) T {
 	if err != nil {
-		log.Printf("unexpected error: %v", err)
+		log.Printf("unexpected error: %+v", err)
 		panic(err)
 	}
 	return v
@@ -257,7 +257,7 @@ func Must[T any](v T, err error) T {
 
 func MustExec(err error) {
 	if err != nil {
-		log.Printf("unexpected error: %v", err)
+		log.Printf("unexpected error: %+v", err)
 		panic(err)
 	}
 }
