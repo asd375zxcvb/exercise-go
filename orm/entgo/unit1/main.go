@@ -7,13 +7,15 @@ import (
 	"entgo/ent/group"
 	"entgo/ent/user"
 	"github.com/cockroachdb/errors"
+	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
 	"log"
 	"time"
 )
 
 func main() {
-	client := Must(ent.Open("postgres", "host=127.0.0.1 port=5432 user=postgres dbname=postgres password=123456 sslmode=disable", ent.Debug()))
+	//client := PanicErr(ent.Open("postgres", "host=127.0.0.1 port=5432 user=postgres dbname=postgres password=123456 sslmode=disable", ent.Debug()))
+	client := PanicErr(ent.Open("mysql", "root:123456@tcp(127.0.0.1:3306)/entgo?parseTime=True", ent.Debug()))
 	defer func(client *ent.Client) {
 		err := client.Close()
 		if err != nil {
@@ -21,40 +23,40 @@ func main() {
 		}
 	}(client)
 	ctx := context.Background()
-	MustExec(client.Schema.Create(ctx))
-	MustExec(round1(ctx, client))
-	MustExec(round2(ctx, client))
-	MustExec(round3(ctx, client))
+	PanicErrExec(client.Schema.Create(ctx))
+	PanicErrExec(round1(ctx, client))
+	PanicErrExec(round2(ctx, client))
+	PanicErrExec(round3(ctx, client))
 }
 
 func round1(ctx context.Context, client *ent.Client) error {
 	log.Println("====================  round1  start =======================")
-	Must(CreateUser(ctx, client))
-	Must(QueryUser(ctx, client))
-	Must(client.User.Delete().Exec(ctx))
+	PanicErr(CreateUser(ctx, client))
+	PanicErr(QueryUser(ctx, client))
+	PanicErr(client.User.Delete().Exec(ctx))
 	log.Println("====================  round1  end   =======================")
 	return nil
 }
 
 func round2(ctx context.Context, client *ent.Client) error {
 	log.Println("====================  round2  start =======================")
-	a8m := Must(CreateCars(ctx, client))
-	MustExec(QueryCars(ctx, a8m))
-	Must(client.User.Delete().Exec(ctx))
-	Must(client.Car.Delete().Exec(ctx))
+	a8m := PanicErr(CreateCars(ctx, client))
+	PanicErrExec(QueryCars(ctx, a8m))
+	PanicErr(client.User.Delete().Exec(ctx))
+	PanicErr(client.Car.Delete().Exec(ctx))
 	log.Println("====================  round2  end   =======================")
 	return nil
 }
 
 func round3(ctx context.Context, client *ent.Client) error {
 	log.Println("====================  round3  start =======================")
-	MustExec(CreateGraph(ctx, client))
-	MustExec(QueryGithub(ctx, client))
-	MustExec(QueryArielCars(ctx, client))
-	MustExec(QueryGroupWithUsers(ctx, client))
-	Must(client.User.Delete().Exec(ctx))
-	Must(client.Car.Delete().Exec(ctx))
-	Must(client.Group.Delete().Exec(ctx))
+	PanicErrExec(CreateGraph(ctx, client))
+	PanicErrExec(QueryGithub(ctx, client))
+	PanicErrExec(QueryArielCars(ctx, client))
+	PanicErrExec(QueryGroupWithUsers(ctx, client))
+	PanicErr(client.User.Delete().Exec(ctx))
+	PanicErr(client.Car.Delete().Exec(ctx))
+	PanicErr(client.Group.Delete().Exec(ctx))
 	log.Println("====================  round3  end   =======================")
 	return nil
 }
@@ -247,7 +249,7 @@ func QueryGroupWithUsers(ctx context.Context, client *ent.Client) error {
 	return nil
 }
 
-func Must[T any](v T, err error) T {
+func PanicErr[T any](v T, err error) T {
 	if err != nil {
 		log.Printf("unexpected error: %+v", err)
 		panic(err)
@@ -255,7 +257,7 @@ func Must[T any](v T, err error) T {
 	return v
 }
 
-func MustExec(err error) {
+func PanicErrExec(err error) {
 	if err != nil {
 		log.Printf("unexpected error: %+v", err)
 		panic(err)

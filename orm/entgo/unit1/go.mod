@@ -5,11 +5,13 @@ go 1.23.1
 require (
 	entgo.io/ent v0.14.1
 	github.com/cockroachdb/errors v1.11.3
+	github.com/go-sql-driver/mysql v1.8.1
 	github.com/lib/pq v1.10.9
 )
 
 require (
 	ariga.io/atlas v0.19.1-0.20240203083654-5948b60a8e43 // indirect
+	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/agext/levenshtein v1.2.1 // indirect
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect

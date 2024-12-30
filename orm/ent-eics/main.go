@@ -13,12 +13,17 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed opening connection to sqlite: %v", err)
 	}
-	defer client.Close()
+	defer func(client *ent.Client) {
+		err := client.Close()
+		if err != nil {
+			log.Fatalf("ent client close failed")
+		}
+	}(client)
 	ctx := context.Background()
 	_, err = QueryTeamMember(ctx, client)
 }
 
-func QueryTeamMember(ctx context.Context, client *ent.Client) (*ent.EicsReceptionTeamMember, error) {
+func QueryTeamMember(ctx context.Context, client *ent.Client) ([]*ent.EicsReceptionTeamMember, error) {
 	u, err := client.EicsReceptionTeamMember.
 		Query().
 		All(ctx)
