@@ -9,17 +9,23 @@ import (
 	"github.com/cockroachdb/errors"
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
+	// _ "github.com/mattn/go-sqlite3"
+	_ "github.com/xiaoqidun/entps"
 	"log"
 	"time"
 )
 
 func main() {
 	//client := PanicErr(ent.Open("postgres", "host=127.0.0.1 port=5432 user=postgres dbname=postgres password=123456 sslmode=disable", ent.Debug()))
-	client := PanicErr(ent.Open("mysql", "root:123456@tcp(127.0.0.1:3306)/entgo?parseTime=True", ent.Debug()))
+	//client := PanicErr(ent.Open("mysql", "root:123456@tcp(127.0.0.1:3306)/entgo?parseTime=True", ent.Debug()))
+	//client := PanicErr(ent.Open("sqlite3", "file:ent?mode=memory&cache=shared&_fk=1", ent.Debug()))
+	client := PanicErr(ent.Open("sqlite3", "file:./ent.db?_fk=1", ent.Debug()))
 	defer func(client *ent.Client) {
 		err := client.Close()
 		if err != nil {
 			log.Fatalf("failed closing the client: %v", err)
+		} else {
+			log.Println("closed the client")
 		}
 	}(client)
 	ctx := context.Background()

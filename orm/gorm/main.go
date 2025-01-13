@@ -1,7 +1,8 @@
 package main
 
 import (
-	"gorm.io/driver/sqlite"
+	"fmt"
+	"github.com/glebarez/sqlite"
 	"gorm.io/gorm"
 )
 
@@ -33,7 +34,9 @@ func main() {
 	// Update - 更新多个字段
 	db.Model(&product).Updates(Product{Price: 200, Code: "F42"}) // 仅更新非零值字段
 	db.Model(&product).Updates(map[string]interface{}{"Price": 200, "Code": "F42"})
-
+	result := Product{}
+	db.Model(&product).Take(&result)
+	fmt.Println(result)
 	// Delete - 删除 product
 	db.Delete(&product, 1)
 }
