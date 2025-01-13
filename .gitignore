@@ -27,3 +27,4 @@ go.work.sum
 /orm/ent-eics
 *.db
 *.sum
+*.log
